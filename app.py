@@ -29,13 +29,14 @@ def submit_survey():
     except ValidationError as ve:
         return jsonify({"error": "validation_error", "detail": ve.errors()}), 422
 
-    record = StoredSurveyRecord(
-        **submission.dict(),
+    record = StoredSurveyRecord.from_submission(
+        submission=submission,
         received_at=datetime.now(timezone.utc),
         ip=request.headers.get("X-Forwarded-For", request.remote_addr or "")
     )
-    append_json_line(record.dict())
+    # Use to_storage_dict() to ensure PII is hashed before storage
+    append_json_line(record.to_storage_dict())
     return jsonify({"status": "ok"}), 201
 
 if __name__ == "__main__":
-    app.run(port=0, debug=True)
+    app.run(port=5000, debug=True)
